@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rooms, Containers, Outfits, Bags & Others Linker</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; display: flex; }
+        main { flex: 2; margin-right: 20px; }
+        .side-lists { flex: 3; display: flex; gap: 5px; }
+        .list-column {
+            flex: none; width: 200px;
+            border: 1px solid #ccc;
+            display: flex; flex-direction: column;
+            transition: width 0.3s;
+        }
+        .room-column { background-color: #e0f7fa; }
+        .container-column { background-color: #fff3e0; }
+        .item-column { background-color: #f3e5f5; }
+        .outfit-column { background-color: #e8f5e9; }
+        .bag-column { background-color: #fce4ec; }
+        .other-column { background-color: #eceff1; }
+
+        .list-column.collapsed { width: 30px; }
+        .list-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 5px; font-size: 14px; font-weight: bold;
+        }
+        .list-header button {
+            background: none; border: none; color: #333;
+            cursor: pointer; font-size: 14px;
+        }
+        .list-column.collapsed .scroll-list { display: none; }
+        .list-column.collapsed .list-header span {
+            writing-mode: vertical-rl; transform: rotate(180deg);
+        }
+        .scroll-list { height: 70vh; overflow-y: auto; border-top: 1px solid #ddd; padding: 5px; }
+        ul { list-style: none; padding-left: 0; margin: 0; }
+        li { cursor: pointer; padding: 2px 5px; }
+        li:hover { background-color: #eee; }
+        h1 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        #output { margin-top: 20px; }
+        button, input[type="file"], input[type="text"] {
+            margin: 5px; padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .main-button { cursor: pointer; color: white; }
+        .room-button { background-color: #00acc1; }
+        .container-button { background-color: #fb8c00; }
+        .item-button { background-color: #8e24aa; }
+        .outfit-button { background-color: #43a047; }
+        .bag-button { background-color: #d81b60; }
+        .other-button { background-color: #546e7a; }
+        .main-button:hover { opacity: 0.8; }
+
+        details summary {
+            padding: 8px; border-radius: 4px;
+            cursor: pointer; margin-bottom: 5px;
+            color: black; font-weight: bold;
+        }
+        .room-result { border: 2px solid #00acc1; margin-bottom: 10px; border-radius: 4px; }
+        .container-result { border: 2px solid #fb8c00; margin-bottom: 10px; border-radius: 4px; }
+        .item-result { border: 2px solid #8e24aa; margin-bottom: 10px; border-radius: 4px; }
+        .outfit-result { border: 2px solid #43a047; margin-bottom: 10px; border-radius: 4px; }
+        .bag-result { border: 2px solid #d81b60; margin-bottom: 10px; border-radius: 4px; }
+        .other-result { border: 2px solid #546e7a; margin-bottom: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Rooms, Containers, Outfits, Bags & Others Linker</h1>
+    Upload Room_Dist.txt<input type="file" id="fileRooms"><br>
+    Upload Proced.txt<input type="file" id="fileContainers"><br>
+    <input type="text" id="searchInput" placeholder="Container name, item, room, outfit, bag or other"><br>
+    <button class="main-button room-button" onclick="searchByRoom()">Search by room</button>
+    <button class="main-button container-button" onclick="searchByContainer()">Search by container</button>
+    <button class="main-button item-button" onclick="searchByItem()">Search by item</button>
+    <button class="main-button outfit-button" onclick="searchByOutfit()">Search by outfit</button>
+    <button class="main-button bag-button" onclick="searchByBag()">Search by bag</button>
+    <button class="main-button other-button" onclick="searchByOther()">Search by other</button>
+    <button style="background-color:#607d8b;color:white;" onclick="clearOutput()">Clear results</button>
+    <div id="output"></div>
+</main>
+
+<div class="side-lists">
+    <div class="list-column room-column" id="roomColumn">
+        <div class="list-header"><span>Rooms</span><button onclick="toggleColumn('roomColumn', this)">«</button></div>
+        <div class="scroll-list"><ul id="roomList"></ul></div>
+    </div>
+    <div class="list-column container-column" id="containerColumn">
+        <div class="list-header"><span>Containers</span><button onclick="toggleColumn('containerColumn', this)">«</button></div>
+        <div class="scroll-list"><ul id="containerList"></ul></div>
+    </div>
+    <div class="list-column item-column" id="itemColumn">
+        <div class="list-header"><span>Items</span><button onclick="toggleColumn('itemColumn', this)">«</button></div>
+        <div class="scroll-list"><ul id="itemList"></ul></div>
+    </div>
+    <div class="list-column outfit-column" id="outfitColumn">
+        <div class="list-header"><span>Outfits</span><button onclick="toggleColumn('outfitColumn', this)">«</button></div>
+        <div class="scroll-list"><ul id="outfitList"></ul></div>
+    </div>
+    <div class="list-column bag-column" id="bagColumn">
+        <div class="list-header"><span>Bags</span><button onclick="toggleColumn('bagColumn', this)">«</button></div>
+        <div class="scroll-list"><ul id="bagList"></ul></div>
+    </div>
+    <div class="list-column other-column" id="otherColumn">
+        <div class="list-header"><span>Others</span><button onclick="toggleColumn('otherColumn', this)">«</button></div>
+        <div class="scroll-list"><ul id="otherList"></ul></div>
+    </div>
+</div>
+
+<script>
+
+let rooms = {}, containers = {}, outfits = {}, bags = {}, others = {}, allItemsSet = new Set();
+
+function toggleColumn(id, btn) {
+    const col = document.getElementById(id);
+    col.classList.toggle('collapsed');
+    btn.textContent = col.classList.contains('collapsed') ? '»' : '«';
+}
+
+document.getElementById('fileRooms').addEventListener('change', e => loadFile(e, parseRooms));
+document.getElementById('fileContainers').addEventListener('change', e => loadFile(e, parseContainers));
+
+function loadFile(event, callback) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => callback(e.target.result);
+    reader.readAsText(file);
+}
+
+function parseRooms(text) {
+    text = text.replace(/local\s+distributionTable\s*=\s*{/, '').trim();
+    const blockRegex = /(\w+)\s*=\s*{/g;
+    const itemsRegex = /items\s*=\s*{([\s\S]*?)}/m;
+    const procListRegex = /procList\s*=\s*{([\s\S]*?)}\s*}/g;
+    const procNameRegex = /name\s*=\s*"([^"]+)"/g;
+    let match;
+    while ((match = blockRegex.exec(text)) !== null) {
+        const name = match[1];
+        const startIndex = match.index + match[0].length;
+        let braceCount = 1, endIndex = startIndex;
+        while (endIndex < text.length && braceCount > 0) {
+            const char = text[endIndex++];
+            if (char === '{') braceCount++;
+            else if (char === '}') braceCount--;
+        }
+        const block = text.substring(startIndex, endIndex - 1);
+        if (name.startsWith('Outfit_') || name.startsWith('Bag_') || /^[A-Z]/.test(name)) {
+            const itemsMatch = itemsRegex.exec(block);
+            if (itemsMatch) {
+                const itemsBlock = itemsMatch[1];
+                const rawItems = itemsBlock.split(',')
+                    .map(i => i.trim().replace(/"|'/g, ''))
+                    .filter(v => v !== '');
+                const items = [];
+                for (let i = 0; i < rawItems.length; i += 2) {
+                    const itemName = rawItems[i];
+                    const weight = rawItems[i + 1];
+                    if (itemName && weight && !itemName.startsWith('--')) {
+                        items.push({ name: itemName, weight });
+                        allItemsSet.add(itemName);
+                    }
+                }
+                if (name.startsWith('Outfit_')) outfits[name] = items;
+                else if (name.startsWith('Bag_')) bags[name] = items;
+                else others[name] = items;
+            }
+        } else {
+            rooms[name] = [];
+            let procListMatch;
+            while ((procListMatch = procListRegex.exec(block)) !== null) {
+                const procList = procListMatch[1];
+                let procMatch;
+                while ((procMatch = procNameRegex.exec(procList)) !== null) {
+                    rooms[name].push(procMatch[1]);
+                }
+            }
+        }
+    }
+    updateRoomList(); updateOutfitList(); updateBagList(); updateOtherList();
+    alert('Rooms, Outfits, Bags et Others loaded');
+}
+
+function parseContainers(text) {
+    text = text.replace(/ProceduralDistributions\.list\s*=\s*{/, '').trim();
+    const containerRegex = /(\w+)\s*=\s*{/g;
+    const itemsRegex = /items\s*=\s*{([\s\S]*?)}/m;
+    let match;
+    while ((match = containerRegex.exec(text)) !== null) {
+        const name = match[1];
+        const startIndex = match.index + match[0].length;
+        let braceCount = 1, endIndex = startIndex;
+        while (endIndex < text.length && braceCount > 0) {
+            const char = text[endIndex++];
+            if (char === '{') braceCount++;
+            else if (char === '}') braceCount--;
+        }
+        const block = text.substring(startIndex, endIndex - 1);
+        const itemsMatch = itemsRegex.exec(block);
+        if (itemsMatch) {
+            const itemsBlock = itemsMatch[1];
+            const rawItems = itemsBlock.split(',')
+                .map(i => i.trim().replace(/"|'/g, ''))
+                .filter(v => v !== '');
+            const items = [];
+            for (let i = 0; i < rawItems.length; i += 2) {
+                const itemName = rawItems[i];
+                const weight = rawItems[i + 1];
+                if (itemName && weight && !itemName.startsWith('--')) {
+                    items.push({ name: itemName, weight });
+                    allItemsSet.add(itemName);
+                }
+            }
+            containers[name] = items;
+        }
+    }
+    updateContainerList(); updateItemList();
+    alert('Containers loaded');
+}
+
+function updateList(id, data) {
+    const l = document.getElementById(id);
+    l.innerHTML = '';
+    Object.keys(data).sort().forEach(k => {
+        const li = document.createElement('li');
+        li.textContent = k;
+        li.onclick = () => document.getElementById('searchInput').value = k;
+        l.appendChild(li);
+    });
+}
+
+function updateRoomList() { updateList('roomList', rooms); }
+function updateContainerList() { updateList('containerList', containers); }
+function updateItemList() { updateList('itemList', Object.fromEntries([...allItemsSet].map(k => [k, null]))); }
+function updateOutfitList() { updateList('outfitList', outfits); }
+function updateBagList() { updateList('bagList', bags); }
+function updateOtherList() { updateList('otherList', others); }
+
+function searchByContainer() {
+    const q = document.getElementById('searchInput').value.trim();
+    if (!q) return;
+    const roomsWithContainer = Object.entries(rooms)
+        .filter(([_, p]) => p.includes(q))
+        .map(([k]) => k);
+    const itemsInContainer = containers[q]
+        ? containers[q].map(it => `${it.name} (${it.weight})`)
+        : [];
+    displayResults('Items in "' + q + '"', itemsInContainer, false, 'container');
+    displayResults('Rooms with "' + q + '"', roomsWithContainer, false, 'room');
+}
+function searchByOutfit() { searchGeneric(outfits, 'Outfit'); }
+function searchByBag() { searchGeneric(bags, 'Bag'); }
+function searchByOther() { searchGeneric(others, 'Other'); }
+
+function searchByItem() {
+    const q = document.getElementById('searchInput').value.trim();
+    if (!q) return;
+    const fc = Object.entries(containers).filter(([_, i]) => i.some(it => it.name === q)).map(([c, i]) => {
+        const t = i.reduce((s, it) => s + parseInt(it.weight), 0);
+        const it = i.find(it => it.name === q);
+        const p = ((parseInt(it.weight) / t) * 100).toFixed(1);
+        return { Container: c, Item: `${it.name} (${it.weight}/${t}=${p}%)` };
+    });
+    const fr = Object.entries(rooms).map(([r, p]) => {
+        const m = p.filter(pc => containers[pc] && containers[pc].some(it => it.name === q)).length;
+        return m > 0 ? `${r} → ${m} container(s)` : null;
+    }).filter(r => r);
+    displayResults('Containers with "' + q + '"', fc, true, 'container');
+    displayResults('Rooms with "' + q + '"', fr, false, 'room');
+}
+
+function searchByRoom() {
+    const q = document.getElementById('searchInput').value.trim();
+    if (!q) return;
+    const c = rooms[q] || [];
+    displayResults(`Containers in room "${q}"`, c, false, 'room');
+}
+
+function searchGeneric(group, label) {
+    const q = document.getElementById('searchInput').value.trim();
+    if (!q) return;
+    const g = group[q];
+    if (!g) { displayResults(label + ' "' + q + '" not found', [], false, label.toLowerCase()); return; }
+    const il = g.map(it => `${it.name} (${it.weight})`);
+    displayResults(`Items in ${label.toLowerCase()} "${q}"`, il, false, label.toLowerCase());
+}
+
+function displayResults(title, list, isTable = false, type = '') {
+    const d = document.createElement('div');
+    d.classList.add(`${type}-result`);
+    let c = '';
+    if (isTable && list.length > 0) {
+        c = '<table><tr>' + Object.keys(list[0]).map(k => '<th>' + k + '</th>').join('') + '</tr>' +
+            list.map(r => '<tr>' + Object.values(r).map(v => '<td>' + v + '</td>').join('') + '</tr>').join('') + '</table>';
+    } else if (list.length > 0) {
+        c = '<ul>' + list.map(i => '<li>' + i + '</li>').join('') + '</ul>';
+    } else {
+        c = '<p><em>Aucun résultat trouvé.</em></p>';
+    }
+    d.innerHTML = '<details open><summary>' + title + '</summary>' + c + '</details>';
+    document.getElementById('output').appendChild(d);
+}
+
+function clearOutput() { document.getElementById('output').innerHTML = ''; }
+</script>
+</body>
+</html>
