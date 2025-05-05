@@ -1,5 +1,7 @@
 # Project Zomboid Loot Analyzer
 
+New : Python version (main.py) added : do the same think, but in a Python GUI. Just do ```python main.py```
+
 This project is a web tool to analyze and explore loot distributions from Project Zomboid mod files.
 
 It helps modders and curious players to:
