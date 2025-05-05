@@ -6,7 +6,7 @@ class ItemDistAnalyser:
     def __init__(self, root):
         self.root = root
         root.title("Item Dist Analyser")
-        root.geometry("1000x600")
+        root.geometry("1100x650")
 
         self.rooms = {}
         self.containers = {}
@@ -18,6 +18,9 @@ class ItemDistAnalyser:
         style = ttk.Style()
         style.theme_use('clam')
         style.configure("Treeview", rowheight=25)
+        style.map("TButton",
+                  background=[("active", "#ececec")],
+                  foreground=[("active", "#000")])
 
         top_frame = ttk.Frame(root)
         top_frame.pack(fill=tk.X, padx=5, pady=5)
@@ -28,22 +31,27 @@ class ItemDistAnalyser:
         self.search_entry = ttk.Entry(top_frame)
         self.search_entry.pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
 
-        for label, cmd in [("By Room", self.search_by_room),
-                           ("By Container", self.search_by_container),
-                           ("By Item", self.search_by_item),
-                           ("By Outfit", self.search_by_outfit),
-                           ("By Bag", self.search_by_bag),
-                           ("By Other", self.search_by_other),
-                           ("Clear", self.clear_output)]:
-            ttk.Button(top_frame, text=label, command=cmd).pack(side=tk.LEFT, padx=2)
+        self.buttons = {}
+        for label, cmd, color in [("By Room", self.search_by_room, "#00acc1"),
+                                  ("By Container", self.search_by_container, "#fb8c00"),
+                                  ("By Item", self.search_by_item, "#8e24aa"),
+                                  ("By Outfit", self.search_by_outfit, "#43a047"),
+                                  ("By Bag", self.search_by_bag, "#d81b60"),
+                                  ("By Other", self.search_by_other, "#546e7a"),
+                                  ("Clear", self.clear_output, "#607d8b")]:
+            btn = tk.Button(top_frame, text=label, command=cmd, bg=color, fg="white")
+            btn.pack(side=tk.LEFT, padx=2)
+            self.buttons[label] = btn
 
         main_pane = ttk.PanedWindow(root, orient=tk.HORIZONTAL)
         main_pane.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
         self.notebook = ttk.Notebook(main_pane)
         self.listboxes = {}
+        tab_colors = {"Rooms": "#e0f7fa", "Containers": "#fff3e0", "Items": "#f3e5f5",
+                      "Outfits": "#e8f5e9", "Bags": "#fce4ec", "Others": "#eceff1"}
         for name in ["Rooms", "Containers", "Items", "Outfits", "Bags", "Others"]:
-            frame = ttk.Frame(self.notebook)
+            frame = tk.Frame(self.notebook, bg=tab_colors[name])
             lb = tk.Listbox(frame)
             lb.pack(fill=tk.BOTH, expand=True)
             lb.bind('<<ListboxSelect>>', self.on_listbox_select)
@@ -60,6 +68,14 @@ class ItemDistAnalyser:
             self.tree.heading(col, text=col)
             self.tree.column(col, width=250)
         self.tree.pack(fill=tk.BOTH, expand=True)
+
+        # Define Treeview tags/colors
+        self.tree.tag_configure("Room", background="#b2ebf2")
+        self.tree.tag_configure("Container", background="#ffe0b2")
+        self.tree.tag_configure("Item", background="#e1bee7")
+        self.tree.tag_configure("Outfit", background="#c8e6c9")
+        self.tree.tag_configure("Bag", background="#f8bbd0")
+        self.tree.tag_configure("Other", background="#cfd8dc")
 
     def on_listbox_select(self, event):
         lb = event.widget
@@ -170,7 +186,7 @@ class ItemDistAnalyser:
         q = self.search_entry.get().strip()
         rooms = [r for r, plist in self.rooms.items() if q in plist]
         items = [f"{it['name']} ({it['weight']})" for it in self.containers.get(q, [])]
-        results = [("Container Item", q, i) for i in items] + [("Container Room", q, r) for r in rooms]
+        results = [("Container", q, i) for i in items] + [("Room", r, f"Contains {q}") for r in rooms]
         self.show_tree(results)
 
     def search_by_item(self):
@@ -181,11 +197,11 @@ class ItemDistAnalyser:
             for it in items:
                 if it['name'] == q:
                     pct = (float(it['weight']) / total) * 100 if total else 0
-                    results.append(("Item in Container", c, f"{it['weight']}/{total:.1f} = {pct:.1f}%"))
+                    results.append(("Container", c, f"{it['weight']}/{total:.1f} = {pct:.1f}%"))
         for r, plist in self.rooms.items():
             count = sum(1 for p in plist if any(it['name'] == q for it in self.containers.get(p, [])))
             if count:
-                results.append(("Item in Room", r, f"→ {count} container(s) with item"))
+                results.append(("Room", r, f"{count} container(s) with item"))
         if not results:
             results.append(("Item", q, "Aucun résultat trouvé."))
         self.show_tree(results)
@@ -211,7 +227,18 @@ class ItemDistAnalyser:
     def show_tree(self, data):
         self.tree.delete(*self.tree.get_children())
         for type_, name, details in data:
-            self.tree.insert("", tk.END, values=(type_, name, details))
+            tag = "Other"
+            if type_ == "Room":
+                tag = "Room"
+            elif type_ == "Container":
+                tag = "Container"
+            elif type_ == "Item":
+                tag = "Item"
+            elif type_ == "Outfit":
+                tag = "Outfit"
+            elif type_ == "Bag":
+                tag = "Bag"
+            self.tree.insert("", tk.END, values=(type_, name, details), tags=(tag,))
 
     def clear_output(self):
         self.tree.delete(*self.tree.get_children())
