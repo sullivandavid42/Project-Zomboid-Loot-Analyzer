@@ -29,9 +29,9 @@ class ItemDistAnalyser:
         ttk.Button(top_frame, text="Upload Proced.txt", command=self.load_containers_file).pack(side=tk.LEFT, padx=2)
 
         # Ajout du bouton pour voir les favoris
-        ttk.Button(top_frame, text="Voir les favoris", command=self.show_favorites).pack(side=tk.LEFT, padx=2)
+        ttk.Button(top_frame, text="View Favorites", command=self.show_favorites).pack(side=tk.LEFT, padx=2)
         # Ajout du bouton pour générer la structure
-        ttk.Button(top_frame, text="Générer structure", command=self.open_generate_structure).pack(side=tk.LEFT, padx=2)
+        ttk.Button(top_frame, text="Generate Structure", command=self.open_generate_structure).pack(side=tk.LEFT, padx=2)
 
         self.search_entry = ttk.Entry(top_frame)
         self.search_entry.pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
@@ -64,7 +64,7 @@ class ItemDistAnalyser:
             self.listboxes[name.lower()] = lb
         # --- CONTEXT MENU FOR CONTAINERS LISTBOX ---
         self.containers_menu = tk.Menu(self.root, tearoff=0)
-        self.containers_menu.add_command(label="Ajouter à la liste de favoris", command=self.add_selected_listbox_container_to_favorites)
+        self.containers_menu.add_command(label="Add to favorites list", command=self.add_selected_listbox_container_to_favorites)
         self.listboxes['containers'].bind('<Button-3>', self.on_containers_listbox_right_click)
         main_pane.add(self.notebook, weight=1)
 
@@ -89,7 +89,7 @@ class ItemDistAnalyser:
         # Ajout pour gestion des favoris containers
         self.favorite_containers = set()
         self.tree_menu = tk.Menu(self.root, tearoff=0)
-        self.tree_menu.add_command(label="Ajouter à la liste de favoris", command=self.add_selected_container_to_favorites)
+        self.tree_menu.add_command(label="Add to favorites list", command=self.add_selected_container_to_favorites)
         self.tree.bind("<Button-3>", self.on_tree_right_click)
 
         # --- AJOUT : menu contextuel rapide sur la liste principale des conteneurs ---
@@ -103,9 +103,9 @@ class ItemDistAnalyser:
             container_name = values[1]
             if container_name not in self.favorite_containers:
                 self.favorite_containers.add(container_name)
-                messagebox.showinfo("Favoris", f"Container '{container_name}' ajouté à la liste de favoris.")
+                messagebox.showinfo("Favorites", f"Container '{container_name}' added to favorites list.")
             else:
-                messagebox.showinfo("Favoris", f"Container '{container_name}' est déjà dans les favoris.")
+                messagebox.showinfo("Favorites", f"Container '{container_name}' is already in favorites.")
 
     def on_tree_right_click(self, event):
         item_id = self.tree.identify_row(event.y)
@@ -124,9 +124,9 @@ class ItemDistAnalyser:
         container_name = lb.get(selection[0])
         if container_name not in self.favorite_containers:
             self.favorite_containers.add(container_name)
-            messagebox.showinfo("Favoris", f"Container '{container_name}' ajouté à la liste de favoris.")
+            messagebox.showinfo("Favorites", f"Container '{container_name}' added to favorites list.")
         else:
-            messagebox.showinfo("Favoris", f"Container '{container_name}' est déjà dans les favoris.")
+            messagebox.showinfo("Favorites", f"Container '{container_name}' is already in favorites.")
 
     def on_containers_listbox_right_click(self, event):
         lb = self.listboxes['containers']
@@ -135,7 +135,12 @@ class ItemDistAnalyser:
         if index >= 0:
             lb.selection_clear(0, tk.END)
             lb.selection_set(index)
-            self.containers_menu.tk_popup(event.x_root, event.y_root)
+            lb.activate(index)
+            lb.focus_set()
+            try:
+                self.containers_menu.tk_popup(event.x_root, event.y_root)
+            finally:
+                self.containers_menu.grab_release()
 
     def on_listbox_select(self, event):
         lb = event.widget
@@ -151,7 +156,7 @@ class ItemDistAnalyser:
             with open(file_path, 'r', encoding='utf-8') as f:
                 text = f.read()
             self.parse_rooms(text)
-            messagebox.showinfo("Info", "Rooms, Outfits, Bags et Others loaded")
+            messagebox.showinfo("Info", "Rooms, Outfits, Bags and Others loaded")
             self.update_listboxes()
 
     def load_containers_file(self):
@@ -263,7 +268,7 @@ class ItemDistAnalyser:
             if count:
                 results.append(("Room", r, f"{count} container(s) with item"))
         if not results:
-            results.append(("Item", q, "Aucun résultat trouvé."))
+            results.append(("Item", q, "No results found."))
         self.show_tree(results)
 
     def search_by_outfit(self):
@@ -281,7 +286,7 @@ class ItemDistAnalyser:
         if items:
             results = [(label, q, i) for i in items]
         else:
-            results = [(label, q, "Aucun résultat trouvé.")]
+            results = [(label, q, "No results found.")]
         self.show_tree(results)
 
     def show_tree(self, data):
@@ -306,9 +311,9 @@ class ItemDistAnalyser:
     def show_favorites(self):
         # Nouvelle fenêtre pour édition des favoris
         fav_win = tk.Toplevel(self.root)
-        fav_win.title("Containers favoris")
+        fav_win.title("Favorite Containers")
         fav_win.geometry("350x400")
-        tk.Label(fav_win, text="Liste des containers favoris :").pack(pady=5)
+        tk.Label(fav_win, text="Favorite containers list:").pack(pady=5)
         fav_listbox = tk.Listbox(fav_win, selectmode=tk.MULTIPLE)
         fav_listbox.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
         for fav in sorted(self.favorite_containers):
@@ -321,33 +326,33 @@ class ItemDistAnalyser:
                 self.favorite_containers.discard(name)
         btn_frame = tk.Frame(fav_win)
         btn_frame.pack(pady=5)
-        tk.Button(btn_frame, text="Supprimer la sélection", command=remove_selected).pack(side=tk.LEFT, padx=5)
-        tk.Button(btn_frame, text="Fermer", command=fav_win.destroy).pack(side=tk.LEFT, padx=5)
+        tk.Button(btn_frame, text="Remove selection", command=remove_selected).pack(side=tk.LEFT, padx=5)
+        tk.Button(btn_frame, text="Close", command=fav_win.destroy).pack(side=tk.LEFT, padx=5)
 
     def open_generate_structure(self):
         if not self.favorite_containers:
-            messagebox.showinfo("Structure", "Aucun container favori pour la génération.")
+            messagebox.showinfo("Structure", "No favorite containers to generate.")
             return
         # Dictionnaire temporaire pour stocker les items par container
         container_items = {c: [] for c in self.favorite_containers}
         win = tk.Toplevel(self.root)
-        win.title("Générer structure containers")
+        win.title("Generate container structure")
         win.geometry("900x750")
         win.configure(bg="#f4f6fa")
         frame = tk.Frame(win, bg="#f4f6fa")
         frame.pack(fill=tk.BOTH, expand=True)
 
         # --- Zone items custom du joueur ---
-        custom_items_frame = tk.LabelFrame(frame, text="Items personnalisés (un par ligne)", bg="#e3f2fd", fg="#1565c0", font=("Segoe UI", 10, "bold"), bd=2, relief=tk.GROOVE)
+        custom_items_frame = tk.LabelFrame(frame, text="Custom items (one per line)", bg="#e3f2fd", fg="#1565c0", font=("Segoe UI", 10, "bold"), bd=2, relief=tk.GROOVE)
         custom_items_frame.pack(fill=tk.X, padx=14, pady=8)
         custom_items_text = tk.Text(custom_items_frame, height=4, font=("Segoe UI", 10), bg="#ffffff")
         custom_items_text.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5, pady=5)
-        update_custom_btn = tk.Button(custom_items_frame, text="Mettre à jour la liste", width=18, bg="#90caf9", fg="#0d47a1", font=("Segoe UI", 9, "bold"))
+        update_custom_btn = tk.Button(custom_items_frame, text="Update list", width=18, bg="#90caf9", fg="#0d47a1", font=("Segoe UI", 9, "bold"))
         update_custom_btn.pack(side=tk.RIGHT, padx=5)
         # Listbox pour sélection rapide custom avec scrollbar
         custom_listbox_frame = tk.Frame(frame, bg="#f4f6fa")
         custom_listbox_frame.pack(fill=tk.X, padx=14, pady=2)
-        tk.Label(custom_listbox_frame, text="Sélection rapide dans vos items personnalisés", bg="#f4f6fa", fg="#1976d2", font=("Segoe UI", 9, "italic")).pack(anchor="w")
+        tk.Label(custom_listbox_frame, text="Quick select from your custom items", bg="#f4f6fa", fg="#1976d2", font=("Segoe UI", 9, "italic")).pack(anchor="w")
         custom_listbox = tk.Listbox(custom_listbox_frame, selectmode=tk.MULTIPLE, height=6, font=("Consolas", 10), bg="#e3f2fd")
         custom_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         custom_scroll = tk.Scrollbar(custom_listbox_frame, orient="vertical", command=custom_listbox.yview)
@@ -361,11 +366,11 @@ class ItemDistAnalyser:
         update_custom_btn.config(command=update_custom_list)
 
         # --- Zone items de base du jeu avec scrollbar ---
-        base_items_frame = tk.LabelFrame(frame, text="Items de base du jeu (issus des fichiers chargés)", bg="#e8f5e9", fg="#1b5e20", font=("Segoe UI", 10, "bold"), bd=2, relief=tk.GROOVE)
+        base_items_frame = tk.LabelFrame(frame, text="Default game items (from loaded files)", bg="#e8f5e9", fg="#1b5e20", font=("Segoe UI", 10, "bold"), bd=2, relief=tk.GROOVE)
         base_items_frame.pack(fill=tk.X, padx=14, pady=8)
         base_listbox_frame = tk.Frame(base_items_frame, bg="#e8f5e9")
         base_listbox_frame.pack(fill=tk.X)
-        tk.Label(base_listbox_frame, text="Sélection rapide dans tous les items connus du jeu", bg="#e8f5e9", fg="#388e3c", font=("Segoe UI", 9, "italic")).pack(anchor="w")
+        tk.Label(base_listbox_frame, text="Quick select from all known game items", bg="#e8f5e9", fg="#388e3c", font=("Segoe UI", 9, "italic")).pack(anchor="w")
         base_listbox = tk.Listbox(base_listbox_frame, selectmode=tk.MULTIPLE, height=6, font=("Consolas", 10), bg="#e8f5e9")
         base_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         base_scroll = tk.Scrollbar(base_listbox_frame, orient="vertical", command=base_listbox.yview)
@@ -386,8 +391,8 @@ class ItemDistAnalyser:
         for container in sorted(self.favorite_containers):
             group = tk.LabelFrame(inner, text=container, bg="#fffde7", fg="#f57c00", font=("Segoe UI", 10, "bold"), bd=2, relief=tk.GROOVE)
             group.pack(fill=tk.X, padx=10, pady=8, anchor="n")
-            tk.Label(group, text="Nom de l'item", bg="#fffde7", fg="#e65100", font=("Segoe UI", 9)).grid(row=0, column=0)
-            tk.Label(group, text="Taux de spawn", bg="#fffde7", fg="#e65100", font=("Segoe UI", 9)).grid(row=0, column=1)
+            tk.Label(group, text="Item name", bg="#fffde7", fg="#e65100", font=("Segoe UI", 9)).grid(row=0, column=0)
+            tk.Label(group, text="Spawn chance", bg="#fffde7", fg="#e65100", font=("Segoe UI", 9)).grid(row=0, column=1)
             tk.Label(group, text="Rolls", bg="#fffde7", fg="#e65100", font=("Segoe UI", 9)).grid(row=0, column=2)
             item_var = tk.StringVar()
             chance_var = tk.StringVar(value="5")
@@ -411,7 +416,7 @@ class ItemDistAnalyser:
                 def _refresh():
                     il.delete(0, tk.END)
                     for idx, d in enumerate(container_items[c]):
-                        il.insert(tk.END, f"{d['item']} (Taux: {d['chance']}, Rolls: {d['rolls']})")
+                        il.insert(tk.END, f"{d['item']} (Chance: {d['chance']}, Rolls: {d['rolls']})")
                     refresh_all()
                 return _refresh
             refresh_items_list = make_refresh_items_list(container, items_list)
@@ -478,21 +483,21 @@ class ItemDistAnalyser:
             remove_selected = make_remove_selected(container, items_list, refresh_items_list)
             add_from_custom = make_add_from_custom(container, chance_var, rolls_var, refresh_items_list)
             add_from_base = make_add_from_base(container, chance_var, rolls_var, refresh_items_list)
-            tk.Button(group, text="Ajouter", command=add_item, bg="#ffe0b2", fg="#e65100", font=("Segoe UI", 9, "bold")).grid(row=1, column=3, padx=6)
-            tk.Button(group, text="+ depuis liste perso", command=add_from_custom, bg="#e3f2fd", fg="#1976d2", font=("Segoe UI", 9)).grid(row=1, column=4, padx=6)
-            tk.Button(group, text="+ depuis items de base", command=add_from_base, bg="#e8f5e9", fg="#388e3c", font=("Segoe UI", 9)).grid(row=1, column=5, padx=6)
-            tk.Button(group, text="Supprimer sélection", command=remove_selected, bg="#ffcdd2", fg="#b71c1c", font=("Segoe UI", 9)).grid(row=3, column=0, columnspan=3, pady=2)
+            tk.Button(group, text="Add", command=add_item, bg="#ffe0b2", fg="#e65100", font=("Segoe UI", 9, "bold")).grid(row=1, column=3, padx=6)
+            tk.Button(group, text="+ from custom list", command=add_from_custom, bg="#e3f2fd", fg="#1976d2", font=("Segoe UI", 9)).grid(row=1, column=4, padx=6)
+            tk.Button(group, text="+ from default items", command=add_from_base, bg="#e8f5e9", fg="#388e3c", font=("Segoe UI", 9)).grid(row=1, column=5, padx=6)
+            tk.Button(group, text="Remove selection", command=remove_selected, bg="#ffcdd2", fg="#b71c1c", font=("Segoe UI", 9)).grid(row=3, column=0, columnspan=3, pady=2)
             entry_widgets[container] = (item_var, chance_var, rolls_var, items_list)
 
         # --- Zone de sortie code généré ---
-        output_frame = tk.LabelFrame(win, text="Code Lua généré (prêt à copier)", bg="#f4f6fa", fg="#263238", font=("Segoe UI", 10, "bold"), bd=2, relief=tk.GROOVE)
+        output_frame = tk.LabelFrame(win, text="Generated Lua code (ready to copy)", bg="#f4f6fa", fg="#263238", font=("Segoe UI", 10, "bold"), bd=2, relief=tk.GROOVE)
         output_frame.pack(fill=tk.BOTH, padx=14, pady=10, expand=True)
         output = tk.Text(output_frame, height=13, font=("Consolas", 11), bg="#eceff1")
         output.pack(fill=tk.BOTH, padx=8, pady=8, expand=True)
         def copy_to_clipboard():
             win.clipboard_clear()
             win.clipboard_append(output.get("1.0", tk.END))
-        copy_btn = tk.Button(output_frame, text="Copier le code", command=copy_to_clipboard, bg="#b2dfdb", fg="#00695c", font=("Segoe UI", 10, "bold"))
+        copy_btn = tk.Button(output_frame, text="Copy code", command=copy_to_clipboard, bg="#b2dfdb", fg="#00695c", font=("Segoe UI", 10, "bold"))
         copy_btn.pack(anchor="e", padx=12, pady=(0,8))
         def generate():
             result = []
@@ -534,7 +539,7 @@ class ItemDistAnalyser:
         def refresh_all():
             generate()
         # Génération du texte final
-        tk.Button(win, text="Générer structure", command=generate, bg="#bbdefb", fg="#0d47a1", font=("Segoe UI", 10, "bold")).pack(pady=8)
+        tk.Button(win, text="Generate structure", command=generate, bg="#bbdefb", fg="#0d47a1", font=("Segoe UI", 10, "bold")).pack(pady=8)
         generate()
         # Appeler generate() après chaque ajout/suppression d'item
         for container in sorted(self.favorite_containers):
